@@ -9,6 +9,7 @@ import java.io.IOException;
 
 
 public class ProgramLoader {
+    private static final int MEMORY_OFFSET = 0x200;
     private Memory memory;
 
     public ProgramLoader(Memory memory) {
@@ -16,7 +17,7 @@ public class ProgramLoader {
     }
 
     public boolean loadProgram(String fileName) {
-        FileInputStream fileInputStream = null;
+        FileInputStream fileInputStream;
 
         try {
             fileInputStream = new FileInputStream(fileName);
@@ -27,15 +28,13 @@ public class ProgramLoader {
 
         DataInputStream inputStream = new DataInputStream(fileInputStream);
 
-        int memoryOffset = 0;
+        int address = MEMORY_OFFSET;
 
         try {
             while(inputStream.available() > 0) {
-                int address = 0x200 + memoryOffset;
-                byte value = (byte) (inputStream.readByte() & 0xFF);
-
-                memory.writeByte(address, value);
-                memoryOffset++;
+                char value = (char) inputStream.readByte();
+                memory.write(address, value);
+                address++;
             }
         } catch (IOException | BadMemoryAccessException e) {
             e.printStackTrace();

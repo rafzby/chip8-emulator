@@ -2,14 +2,16 @@ package vm;
 
 import vm.exceptions.BadMemoryAccessException;
 
+
 public class Memory {
-    private byte[] memory;
+    private static final int MEMORY_SIZE = 0x1000;
+    private char[] memory;
 
     public Memory() {
-        memory = new byte[4096];
+        memory = new char[MEMORY_SIZE];
     }
 
-    public byte fetchByte(int address) throws BadMemoryAccessException {
+    public char read(int address) throws BadMemoryAccessException {
         if(address < 0 || address >= memory.length) {
             throw new BadMemoryAccessException("Address (" + address + ") doesn't exists");
         }
@@ -17,20 +19,23 @@ public class Memory {
         return memory[address];
     }
 
-    public void writeByte(int address, byte value) throws BadMemoryAccessException {
+    public void write(int address, char value) throws BadMemoryAccessException {
         if(address < 0 || address >= memory.length) {
             throw new BadMemoryAccessException("Address (" + address + ") doesn't exists");
         }
 
-        memory[address] = value;
+        memory[address] = (char) (value & 0xFF);
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-
         for(int i = 0; i < memory.length; i++) {
-            builder.append(Integer.toHexString(i)).append(": ").append(Integer.toHexString(memory[i])).append("\n");
+            try {
+                builder.append(Integer.toHexString(i)).append(": ").append(Integer.toHexString(read(i))).append("\n");
+            } catch (BadMemoryAccessException e) {
+                e.printStackTrace();
+            }
         }
 
         return builder.toString();

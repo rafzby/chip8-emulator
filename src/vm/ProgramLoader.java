@@ -1,6 +1,7 @@
 package vm;
 
 import vm.exceptions.BadMemoryAccessException;
+import vm.exceptions.ProgramLoaderException;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -10,20 +11,21 @@ import java.io.IOException;
 
 public class ProgramLoader {
     private static final int MEMORY_OFFSET = 0x200;
+
     private Memory memory;
+
 
     public ProgramLoader(Memory memory) {
         this.memory = memory;
     }
 
-    public boolean loadProgram(String fileName) {
+    public void loadProgram(String fileName) throws ProgramLoaderException {
         FileInputStream fileInputStream;
 
         try {
             fileInputStream = new FileInputStream(fileName);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return false;
+            throw new ProgramLoaderException("ROM file not found.");
         }
 
         DataInputStream inputStream = new DataInputStream(fileInputStream);
@@ -36,17 +38,10 @@ public class ProgramLoader {
                 memory.write(address, value);
                 address++;
             }
-        } catch (IOException | BadMemoryAccessException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } catch (BadMemoryAccessException e) {
+            throw new ProgramLoaderException("Attempt to write data to the wrong memory address.");
+        } catch (IOException e) {
+            throw new ProgramLoaderException("Problem when reading data from ROM file.");
         }
-
-        return true;
     }
 }

@@ -5,13 +5,11 @@ import vm.exceptions.MemoryWriteException;
 
 
 public class Memory {
-    private static final int MEMORY_SIZE = 0x1000;
-
     private char[] memory;
 
 
-    public Memory() {
-        memory = new char[MEMORY_SIZE];
+    public Memory(int size) {
+        memory = new char[size];
     }
 
     public char readByte(int address) throws MemoryReadException {

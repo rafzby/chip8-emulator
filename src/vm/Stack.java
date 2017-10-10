@@ -13,7 +13,7 @@ public class Stack {
     }
 
     public void push(char value) throws StackException {
-        if(stackPointer >= stack.length - 1) {
+        if (stackPointer >= stack.length - 1) {
             throw new StackException("Stack overflow.");
         }
 
@@ -21,7 +21,7 @@ public class Stack {
     }
 
     public char pop() throws StackException {
-        if(stackPointer < 0) {
+        if (stackPointer < 0) {
             throw new StackException("Empty stack.");
         }
 

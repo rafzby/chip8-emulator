@@ -32,13 +32,13 @@ public class FontLoader {
     }
 
     public void loadFont() throws FontLoaderException {
-        for(int i = 0; i < FONTSET.length; i++) {
+        for (int i = 0; i < FONTSET.length; i++) {
             int address = MEMORY_OFFSET + i;
             char value = (char) FONTSET[i];
 
             try {
                 memory.writeByte(address, value);
-            } catch(MemoryWriteException e) {
+            } catch (MemoryWriteException e) {
                throw new FontLoaderException("Attempt to write font data to the wrong memory address.");
             }
         }

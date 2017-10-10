@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-
 public class ProgramLoader {
     private static final int MEMORY_OFFSET = 0x200;
 
@@ -33,7 +32,7 @@ public class ProgramLoader {
         int address = MEMORY_OFFSET;
 
         try {
-            while(inputStream.available() > 0) {
+            while (inputStream.available() > 0) {
                 char value = (char) inputStream.readByte();
                 memory.writeByte(address, value);
                 address++;

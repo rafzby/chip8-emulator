@@ -10,12 +10,12 @@ public class Display {
         pixelArray = new byte[size];
     }
 
-    public void setPixelValue(int position, byte value) throws DisplayException {
+    public void setPixelValue(int position, int value) throws DisplayException {
         if (position < 0 || position >= pixelArray.length) {
             throw new DisplayException("Attempt to write pixel value to the wrong position.");
         }
 
-        pixelArray[position] = value;
+        pixelArray[position] = (byte) value;
     }
 
     public byte getPixelValue(int position) throws DisplayException {

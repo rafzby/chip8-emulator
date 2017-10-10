@@ -1,6 +1,4 @@
-package gui;
-
-import vm.Display;
+package vm;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,16 +6,15 @@ import java.awt.*;
 public class DisplayPanel extends JPanel {
     private static final int PIXEL_SIZE = 10;
 
-    private Display display;
+    private byte[] pixelArray;
 
-    public DisplayPanel(Display display) {
-        this.display = display;
+
+    public DisplayPanel(byte[] pixelArray) {
+        this.pixelArray = pixelArray;
     }
 
     @Override
     public void paint(Graphics graphics) {
-        byte[] pixelArray = display.getPixelArray();
-
         for (int i = 0; i < pixelArray.length; i++) {
             Color pixelColor = pixelArray[i] == 0 ? Color.BLACK : Color.WHITE;
             graphics.setColor(pixelColor);

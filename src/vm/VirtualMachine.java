@@ -1,6 +1,5 @@
 package vm;
 
-
 import vm.exceptions.FontLoaderException;
 import vm.exceptions.ProgramLoaderException;
 

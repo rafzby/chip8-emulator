@@ -39,7 +39,7 @@ public class ProgramLoader {
                 address++;
             }
         } catch (MemoryWriteException e) {
-            throw new ProgramLoaderException(e.getMessage());
+            throw new ProgramLoaderException("Attempt to write ROM data to the wrong memory address.");
         } catch (IOException e) {
             throw new ProgramLoaderException("Problem when reading data from ROM file.");
         }

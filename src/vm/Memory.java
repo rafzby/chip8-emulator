@@ -22,6 +22,10 @@ public class Memory {
         return memory[address];
     }
 
+    public char readOpcode(int address) throws MemoryReadException{
+        return (char)((readByte(address) << 8) | readByte(address + 1));
+    }
+
     public void writeByte(int address, char value) throws MemoryWriteException {
         if(address < 0 || address >= memory.length) {
             throw new MemoryWriteException("Attempt to write date to the wrong memory address.");

@@ -1,6 +1,6 @@
 package vm;
 
-import vm.exceptions.BadMemoryAccessException;
+import vm.exceptions.MemoryWriteException;
 import vm.exceptions.ProgramLoaderException;
 
 import java.io.DataInputStream;
@@ -35,11 +35,11 @@ public class ProgramLoader {
         try {
             while(inputStream.available() > 0) {
                 char value = (char) inputStream.readByte();
-                memory.write(address, value);
+                memory.writeByte(address, value);
                 address++;
             }
-        } catch (BadMemoryAccessException e) {
-            throw new ProgramLoaderException("Attempt to write data to the wrong memory address.");
+        } catch (MemoryWriteException e) {
+            throw new ProgramLoaderException(e.getMessage());
         } catch (IOException e) {
             throw new ProgramLoaderException("Problem when reading data from ROM file.");
         }

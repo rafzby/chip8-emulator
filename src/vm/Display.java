@@ -31,4 +31,8 @@ public class Display {
             pixelArray[i] = 0;
         }
     }
+
+    public byte[] getPixelArray() {
+        return pixelArray;
+    }
 }

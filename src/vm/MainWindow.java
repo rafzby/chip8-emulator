@@ -14,14 +14,15 @@ public class MainWindow extends JFrame {
         int width = WINDOW_WIDTH + getInsets().right + getInsets().left;
         int height = WINDOW_HEIGHT + getInsets().top + getInsets().bottom;
         setPreferredSize(new Dimension(width, height));
-        setFocusable(true);
 
         setLayout(new BorderLayout());
 
         add(displayPanel, BorderLayout.CENTER);
+        pack();
 
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle("Chip-8 Emulator");
-        setVisible(true);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setResizable(false);
+        setFocusable(true);
     }
 }

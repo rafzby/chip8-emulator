@@ -18,10 +18,9 @@ public class CPU {
     public CPU(Memory memory) {
         this.memory = memory;
 
-        this.stack = new Stack(STACK_SIZE);
-        this.registerManager = new RegisterManager(REGISTERS_NUMBER);
-
-        this.programCounter = USER_PROGRAM_START_ADDRESS;
+        stack = new Stack(STACK_SIZE);
+        registerManager = new RegisterManager(REGISTERS_NUMBER);
+        programCounter = USER_PROGRAM_START_ADDRESS;
     }
 
     public void execute() throws CpuException {

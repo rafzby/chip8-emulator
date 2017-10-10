@@ -10,7 +10,7 @@ public class RegisterManager {
         registers = new ArrayList<>();
 
         for (int i = 0; i < size; i++) {
-            registers.set(i, new Register());
+            registers.add(i, new Register());
         }
     }
 

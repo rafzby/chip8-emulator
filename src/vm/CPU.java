@@ -9,10 +9,12 @@ public class CPU {
     private static final int STACK_SIZE = 16;
     private static final int REGISTERS_NUMBER = 16;
 
-    private int programCounter;
+    private char programCounter;
     private Memory memory;
     private Stack stack;
     private RegisterManager registerManager;
+    private int delayTimer;
+    private int soundTimer;
 
 
     public CPU(Memory memory) {
@@ -21,6 +23,8 @@ public class CPU {
         stack = new Stack(STACK_SIZE);
         registerManager = new RegisterManager(REGISTERS_NUMBER);
         programCounter = USER_PROGRAM_START_ADDRESS;
+        delayTimer = 0;
+        soundTimer = 0;
     }
 
     public void execute() throws CpuException {

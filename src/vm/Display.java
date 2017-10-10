@@ -25,4 +25,10 @@ public class Display {
 
         return pixelArray[position];
     }
+
+    public void clear() {
+        for(int i = 0; i < pixelArray.length; i++) {
+            pixelArray[i] = 0;
+        }
+    }
 }

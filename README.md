@@ -1,7 +1,7 @@
 # Chip8 Emulator
 
 
-### TODO
+### TODO:
 
  - Passing ROM as program parameter
  - Add double buffering to DisplayPanel.java

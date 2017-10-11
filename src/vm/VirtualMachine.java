@@ -25,7 +25,7 @@ public class VirtualMachine extends Thread implements IODevices {
         keyboard = new Keyboard();
 
         displayPanel = new DisplayPanel(display.getPixelArray());
-        mainWindow = new MainWindow(displayPanel);
+        mainWindow = new MainWindow(displayPanel, keyboard);
 
         cpu = new CPU(memory, this);
 

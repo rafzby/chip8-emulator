@@ -39,8 +39,12 @@ public class Keyboard extends KeyAdapter {
         currentKeyPerssed = 0;
     }
 
-    public int getCurrentKeyPerssed() {
+    public int getCurrentKeyPressed() {
         return currentKeyPerssed;
+    }
+
+    public boolean isKeyPressed(int keycode) {
+        return keycode == currentKeyPerssed;
     }
 
     private int mapKeycodeToChip8Key(int keycode) {

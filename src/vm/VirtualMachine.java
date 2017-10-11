@@ -16,12 +16,13 @@ public class VirtualMachine extends Thread implements IODevice {
     private ProgramLoader programLoader;
     private Display display;
     private Keyboard keyboard;
-
+    private SoundPlayer soundPlayer;
 
     public VirtualMachine() {
         memory = new Memory(MEMORY_SIZE);
         display = new Display(DISPLAY_SIZE);
         keyboard = new Keyboard();
+        soundPlayer = new SoundPlayer();
 
         displayPanel = new DisplayPanel(display.getPixelArray());
         mainWindow = new MainWindow(displayPanel, keyboard);
@@ -92,6 +93,16 @@ public class VirtualMachine extends Thread implements IODevice {
             e.printStackTrace();
             System.exit(0);
         }
+    }
+
+    @Override
+    public void playSound() {
+        soundPlayer.play();
+    }
+
+    @Override
+    public void stopSound() {
+        soundPlayer.stop();
     }
 
     @Override

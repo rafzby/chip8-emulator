@@ -509,7 +509,11 @@ public class CPU {
 
         if (soundTimer != 0) {
             soundTimer--;
-            // TODO implement midi player
+            ioDevice.playSound();
+        }
+
+        if (soundTimer == 0) {
+            ioDevice.stopSound();
         }
     }
 }

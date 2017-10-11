@@ -1,8 +1,10 @@
 package vm;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyListener;
+import java.io.IOException;
 
 public class MainWindow extends JFrame {
     private static final int WINDOW_WIDTH = 640;
@@ -27,5 +29,12 @@ public class MainWindow extends JFrame {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
         setFocusable(true);
+
+        try {
+           Image icon = ImageIO.read(ClassLoader.getSystemResource("images/icon.png"));
+           setIconImage(icon);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

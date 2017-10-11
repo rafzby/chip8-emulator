@@ -7,7 +7,7 @@ public class Main {
             virtualMachine.loadProgram(args[0]);
             virtualMachine.start();
         } else {
-            System.err.println("Missing parameter with ROM path.");
+            System.err.println("Missing argument with ROM path.");
         }
     }
 }

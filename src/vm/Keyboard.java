@@ -22,29 +22,25 @@ public class Keyboard extends KeyAdapter {
             KeyEvent.VK_M, // F
     };
 
-    private int currentKeyPerssed;
+    private int currentKeyPressed;
 
 
     public Keyboard() {
-        currentKeyPerssed = 0;
+        currentKeyPressed = 0;
     }
 
     @Override
     public void keyPressed(KeyEvent keyEvent) {
-        currentKeyPerssed = mapKeycodeToChip8Key(keyEvent.getKeyCode());
+        currentKeyPressed = mapKeycodeToChip8Key(keyEvent.getKeyCode());
     }
 
     @Override
     public void keyReleased(KeyEvent keyEvent) {
-        currentKeyPerssed = 0;
+        currentKeyPressed = 0;
     }
 
     public int getCurrentKeyPressed() {
-        return currentKeyPerssed;
-    }
-
-    public boolean isKeyPressed(int keycode) {
-        return keycode == currentKeyPerssed;
+        return currentKeyPressed;
     }
 
     private int mapKeycodeToChip8Key(int keycode) {

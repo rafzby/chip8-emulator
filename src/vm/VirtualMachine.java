@@ -16,7 +16,6 @@ public class VirtualMachine extends Thread implements IODevices {
     private ProgramLoader programLoader;
     private Display display;
     private Keyboard keyboard;
-    private boolean windowNeedsRepaint;
 
 
     public VirtualMachine() {
@@ -31,8 +30,6 @@ public class VirtualMachine extends Thread implements IODevices {
 
         fontLoader = new FontLoader(memory);
         programLoader = new ProgramLoader(memory);
-
-        windowNeedsRepaint = false;
 
         loadFont();
     }
@@ -64,11 +61,6 @@ public class VirtualMachine extends Thread implements IODevices {
             try {
                 cpu.execute();
 
-                if (windowNeedsRepaint) {
-                    mainWindow.repaint();
-                    windowNeedsRepaint = false;
-                }
-
                 try {
                     sleep(2);
                 } catch (InterruptedException e) {
@@ -89,7 +81,7 @@ public class VirtualMachine extends Thread implements IODevices {
 
     @Override
     public void repaintDisplay() {
-        windowNeedsRepaint = true;
+        mainWindow.repaint();
     }
 
     @Override
@@ -116,10 +108,5 @@ public class VirtualMachine extends Thread implements IODevices {
     @Override
     public int getCurrentKeyPressed() {
         return keyboard.getCurrentKeyPressed();
-    }
-
-    @Override
-    public boolean isKeyPressed(int key) {
-        return keyboard.isKeyPressed(key);
     }
 }

@@ -6,5 +6,4 @@ public interface IODevices {
     void setPixelValue(int position, int value);
     int getPixelValue(int position);
     int getCurrentKeyPressed();
-    boolean isKeyPressed(int key);
 }

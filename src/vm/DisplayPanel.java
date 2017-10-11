@@ -11,7 +11,6 @@ public class DisplayPanel extends JPanel {
 
     public DisplayPanel(byte[] pixelArray) {
         this.pixelArray = pixelArray;
-        setDoubleBuffered(true);
     }
 
     @Override

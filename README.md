@@ -1,4 +1,7 @@
-# Chip8 Emulator
+# Chip-8 Emulator
+
+![chip-8](https://i.imgur.com/nsimcJk.png)
+
 
 ### Todos
 

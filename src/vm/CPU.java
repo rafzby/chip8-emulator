@@ -12,18 +12,19 @@ public class CPU {
     private char programCounter;
     private Memory memory;
     private Stack stack;
-    private CPUCallbacks callbacks;
+    private IODevices ioDevices;
     private int delayTimer;
     private int soundTimer;
     private char[] V;
     private char I;
 
 
-    public CPU(Memory memory, CPUCallbacks callbacks) {
+    public CPU(Memory memory, IODevices ioDevices) {
         this.memory = memory;
-        this.callbacks = callbacks;
+        this.ioDevices = ioDevices;
 
         stack = new Stack(STACK_SIZE);
+
         programCounter = USER_PROGRAM_START_ADDRESS;
         delayTimer = 0;
         soundTimer = 0;
@@ -32,7 +33,7 @@ public class CPU {
         I = 0x0;
     }
 
-    public void execute() throws CpuException {
+    public void execute() throws CpuException, InterruptedException {
         try {
             char opcode = memory.readOpcode(programCounter);
 
@@ -43,7 +44,7 @@ public class CPU {
 
                         // 00E00: Clear the display (CLS)
                         case 0x00E0: {
-                            callbacks.onDisplayClear();
+                            ioDevices.clearDisplay();
                             programCounter += 2;
                             break;
                         }
@@ -351,20 +352,19 @@ public class CPU {
                                 totalY = totalY % 32;
 
                                 int index = totalY * 64 + totalX;
-
-                                int pixelValue = callbacks.onDisplayGetPixelValue(index);
+                                int pixelValue = ioDevices.getPixelValue(index);
 
                                 if (pixelValue == 1) {
                                     V[0xF] = 1;
                                 }
 
-                                callbacks.onDisplaySetPixelValue(index, pixelValue ^ 1);
+                                ioDevices.setPixelValue(index, pixelValue ^ 1);
                             }
                         }
                     }
 
                     programCounter += 2;
-                    callbacks.onDisplayRepaint();
+                    ioDevices.repaintDisplay();
                     break;
                 }
 
@@ -376,14 +376,11 @@ public class CPU {
                         case 0x00A1: {
                             int x = (opcode & 0x0F00) >> 8;
 
-                           /* if(keys[V[x]] == 0) {
+                            if (!ioDevices.isKeyPressed(V[x])) {
                                 programCounter += 4;
                             } else {
                                 programCounter += 2;
-                            }*/
-
-                            programCounter += 2; // TODO remove
-
+                            }
                             break;
                         }
 
@@ -391,13 +388,11 @@ public class CPU {
                         case 0x009E: {
                             int x = (opcode & 0x0F00) >> 8;
 
-                           /* if(keys[V[x]] ==  1) {
+                            if (ioDevices.isKeyPressed(V[x])) {
                                 programCounter += 4;
                             } else {
                                 programCounter += 2;
-                            }*/
-
-                           programCounter += 2; // TODO remove
+                            }
                             break;
                         }
 
@@ -414,22 +409,24 @@ public class CPU {
                         // Fx07: Set Vx = delay timer value (LD Vx, DT)
                         case 0x0007: {
                             int x = (opcode & 0x0F00) >> 8;
-                            V[x] = (char)delayTimer;
+                            V[x] = (char) delayTimer;
                             programCounter += 2;
 
                             break;
                         }
 
-                        // Fx0A: Wait for keypress, store the value of the key in Vx (LD Vx, K)
+                        // Fx0A: Wait for key press, store the value of the key in Vx (LD Vx, K)
                         case 0x000A: {
-                            /*for(int i = 0; i < keys.length; i++) {
+                            int x = (opcode & 0xF00);
+                            int currentKey = ioDevices.getCurrentKeyPressed();
 
-                                if(keys[i] == 1) {
-                                    programCounter += 2;
-                                }
-                            }*/
+                            while (currentKey == 0) {
+                                Thread.sleep(300);
+                                currentKey = ioDevices.getCurrentKeyPressed();
+                            }
 
-                            programCounter += 2; //TODO remove
+                            V[x] = (char) currentKey;
+                            programCounter += 2;
 
                             break;
                         }
@@ -525,6 +522,14 @@ public class CPU {
 
                 default:
                     throw new CpuException("Unsupported opcode.");
+            }
+
+            if(soundTimer > 0) {
+                soundTimer--;
+            }
+
+            if(delayTimer > 0) {
+                delayTimer--;
             }
         } catch (MemoryReadException e) {
             throw new CpuException("Unable to read opcode from memory.");

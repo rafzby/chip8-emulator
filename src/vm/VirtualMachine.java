@@ -1,11 +1,10 @@
 package vm;
 
-import vm.exceptions.CpuException;
 import vm.exceptions.DisplayException;
 import vm.exceptions.FontLoaderException;
 import vm.exceptions.ProgramLoaderException;
 
-public class VirtualMachine extends Thread implements CPUCallbacks {
+public class VirtualMachine extends Thread implements IODevices {
     private static final int MEMORY_SIZE = 0x1000;
     private static final int DISPLAY_SIZE = 0x800;
 
@@ -71,12 +70,12 @@ public class VirtualMachine extends Thread implements CPUCallbacks {
                 }
 
                 try {
-                    Thread.sleep(60);
+                    sleep(2);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                     System.exit(0);
                 }
-            } catch (CpuException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
                 System.exit(0);
             }
@@ -84,17 +83,17 @@ public class VirtualMachine extends Thread implements CPUCallbacks {
     }
 
     @Override
-    public void onDisplayRepaint() {
-        windowNeedsRepaint = true;
-    }
-
-    @Override
-    public void onDisplayClear() {
+    public void clearDisplay() {
         display.clear();
     }
 
     @Override
-    public void onDisplaySetPixelValue(int position, int value) {
+    public void repaintDisplay() {
+        windowNeedsRepaint = true;
+    }
+
+    @Override
+    public void setPixelValue(int position, int value) {
         try {
             display.setPixelValue(position, value);
         } catch (DisplayException e) {
@@ -104,14 +103,23 @@ public class VirtualMachine extends Thread implements CPUCallbacks {
     }
 
     @Override
-    public int onDisplayGetPixelValue(int position) {
+    public int getPixelValue(int position) {
         try {
             return display.getPixelValue(position);
         } catch (DisplayException e) {
             e.printStackTrace();
             System.exit(0);
+            return 0;
         }
+    }
 
-        return 0; // TODO remove return 0;
+    @Override
+    public int getCurrentKeyPressed() {
+        return keyboard.getCurrentKeyPressed();
+    }
+
+    @Override
+    public boolean isKeyPressed(int key) {
+        return keyboard.isKeyPressed(key);
     }
 }

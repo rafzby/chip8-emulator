@@ -3,7 +3,7 @@
 ![chip-8](https://i.imgur.com/nsimcJk.png)
 
 
-### Todos
+### Todo
 
  - Add double buffering to DisplayPanel.java
  - Extract CPU operations to separate functions

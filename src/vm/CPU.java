@@ -10,34 +10,36 @@ public class CPU {
     private static final char PROGRAM_COUNTER_START = 0x200;
     private static final int STACK_SIZE = 16;
     private static final int REGISTERS_NUMBER = 16;
+    private static final long TIMERS_INTERVAL = 17;
 
-    private char programCounter;
     private Memory memory;
     private Stack stack;
-    private IODevices ioDevices;
+    private IODevice ioDevice;
+    private char programCounter;
     private int delayTimer;
     private int soundTimer;
     private char[] V;
     private char I;
 
 
-    public CPU(Memory memory, IODevices ioDevices) {
+    public CPU(Memory memory, IODevice ioDevice) {
         this.memory = memory;
-        this.ioDevices = ioDevices;
+        this.ioDevice = ioDevice;
 
         stack = new Stack(STACK_SIZE);
 
         programCounter = PROGRAM_COUNTER_START;
-        delayTimer = 0;
-        soundTimer = 0;
 
         V = new char[REGISTERS_NUMBER];
-        I = 0x0;
+        I = 0;
+
+        delayTimer = 0;
+        soundTimer = 0;
 
         initTimers();
     }
 
-    public void execute() throws CpuException, InterruptedException, StackException {
+    public void execute() throws CpuException, InterruptedException, StackException, MemoryWriteException {
         try {
             char opcode = memory.readOpcode(programCounter);
 
@@ -47,7 +49,7 @@ public class CPU {
 
                         // 00E00: Clear the display (CLS)
                         case 0x00E0: {
-                            ioDevices.clearDisplay();
+                            ioDevice.clearDisplay();
                             programCounter += 2;
                             break;
                         }
@@ -322,19 +324,19 @@ public class CPU {
                                 totalY = totalY % 32;
 
                                 int index = totalY * 64 + totalX;
-                                int pixelValue = ioDevices.getPixelValue(index);
+                                int pixelValue = ioDevice.getPixelValue(index);
 
                                 if (pixelValue == 1) {
                                     V[0xF] = 1;
                                 }
 
-                                ioDevices.setPixelValue(index, pixelValue ^ 1);
+                                ioDevice.setPixelValue(index, pixelValue ^ 1);
                             }
                         }
                     }
 
                     programCounter += 2;
-                    ioDevices.repaintDisplay();
+                    ioDevice.repaintDisplay();
                     break;
                 }
 
@@ -345,7 +347,7 @@ public class CPU {
                         case 0x00A1: {
                             int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if (ioDevices.getCurrentKeyPressed() != V[sourceRegister]) {
+                            if (ioDevice.getCurrentKeyPressed() != V[sourceRegister]) {
                                 programCounter += 4;
                             } else {
                                 programCounter += 2;
@@ -357,7 +359,7 @@ public class CPU {
                         case 0x009E: {
                             int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if (ioDevices.getCurrentKeyPressed() == V[sourceRegister]) {
+                            if (ioDevice.getCurrentKeyPressed() == V[sourceRegister]) {
                                 programCounter += 4;
                             } else {
                                 programCounter += 2;
@@ -386,11 +388,11 @@ public class CPU {
                         // Fx0A: Wait for key press, store the value of the key in Vx (LD Vx, K)
                         case 0x000A: {
                             int targetRegister = (opcode & 0x0F00);
-                            int currentKey = ioDevices.getCurrentKeyPressed();
+                            int currentKey = ioDevice.getCurrentKeyPressed();
 
                             while (currentKey == 0) {
                                 Thread.sleep(300);
-                                currentKey = ioDevices.getCurrentKeyPressed();
+                                currentKey = ioDevice.getCurrentKeyPressed();
                             }
 
                             V[targetRegister] = (char) currentKey;
@@ -463,10 +465,11 @@ public class CPU {
                         //Fx65: Read registers V0 through Vx from memory starting at location I (LD Vx, [I])
                         case 0x0065: {
                             int numRegisters = (opcode & 0x0F00) >> 8;
-                            for(int i = 0; i <= numRegisters; i++) {
+                            for (int i = 0; i <= numRegisters; i++) {
                                 V[i] = memory.readByte(I + i);
                             }
-                            //I = (char)(I + numRegisters + 1);
+
+                            I = (char) (I + numRegisters + 1);
 
                             programCounter += 2;
 
@@ -485,19 +488,18 @@ public class CPU {
             }
         } catch (MemoryReadException e) {
             throw new CpuException("Unable to read opcode from memory.");
-        }  catch (MemoryWriteException e) {
-            e.printStackTrace();
         }
     }
 
     private void initTimers() {
-        Timer timer = new Timer("Delay Timer");
+        Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 decrementTimers();
+                decrementTimers();
             }
-        }, 17, 17); // TODO move times to consts
+        }, TIMERS_INTERVAL, TIMERS_INTERVAL);
     }
 
     private void decrementTimers() {

@@ -1,6 +1,6 @@
 package vm;
 
-public interface IODevices {
+public interface IODevice {
     void clearDisplay();
     void repaintDisplay();
     void setPixelValue(int position, int value);

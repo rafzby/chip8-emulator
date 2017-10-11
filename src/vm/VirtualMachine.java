@@ -4,7 +4,7 @@ import vm.exceptions.DisplayException;
 import vm.exceptions.FontLoaderException;
 import vm.exceptions.ProgramLoaderException;
 
-public class VirtualMachine extends Thread implements IODevices {
+public class VirtualMachine extends Thread implements IODevice {
     private static final int MEMORY_SIZE = 0x1000;
     private static final int DISPLAY_SIZE = 0x800;
 

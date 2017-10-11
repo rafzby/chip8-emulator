@@ -41,10 +41,6 @@ public class CPU {
         try {
             char opcode = memory.readOpcode(programCounter);
 
-           // System.out.println(memory);
-            //System.exit(0);
-           // System.out.println(Integer.toHexString(opcode));
-
             switch(opcode & 0xF000) {
                 case 0x0000: {
                     switch(opcode & 0x00FF) {

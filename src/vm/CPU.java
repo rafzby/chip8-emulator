@@ -43,7 +43,7 @@ public class CPU {
         try {
             char opcode = memory.readOpcode(programCounter);
 
-            switch(opcode & 0xF000) {
+            switch (opcode & 0xF000) {
                 case 0x0000: {
                     switch(opcode & 0x00FF) {
 
@@ -84,12 +84,7 @@ public class CPU {
                 case 0x3000: {
                     int sourceRegister = (opcode & 0x0F00) >> 8;
                     int value = (opcode & 0x00FF);
-
-                    if (V[sourceRegister] == value) {
-                        programCounter += 4;
-                    } else {
-                        programCounter += 2;
-                    }
+                    programCounter += V[sourceRegister] == value ? 4 : 2;
                     break;
                 }
 
@@ -97,7 +92,6 @@ public class CPU {
                 case 0x4000: {
                     int sourceRegister = (opcode & 0x0F00) >> 8;
                     int value = (opcode & 0x00FF);
-
                     programCounter += V[sourceRegister] != value ? 4 : 2;
                     break;
                 }
@@ -106,7 +100,6 @@ public class CPU {
                 case 0x5000: {
                     int sourceRegister = (opcode & 0x0F00) >> 8;
                     int targetRegister = (opcode & 0x00F0) >> 4;
-
                     programCounter += V[sourceRegister] == V[targetRegister] ? 4 : 2;
                     break;
                 }
@@ -114,9 +107,7 @@ public class CPU {
                 // 6xkk: Set Vx = kk (LD Vx, byte)
                 case 0x6000: {
                     int targetRegister = (opcode & 0x0F00) >> 8;
-
                     V[targetRegister] = (char) (opcode & 0x00FF);
-
                     programCounter += 2;
                     break;
                 }
@@ -125,7 +116,6 @@ public class CPU {
                 case 0x7000: {
                     int targetRegister = (opcode & 0x0F00) >> 8;
                     int value = (opcode & 0x00FF);
-
                     V[targetRegister] = (char) ((V[targetRegister] + value) & 0xFF);
                     programCounter += 2;
                     break;
@@ -139,9 +129,7 @@ public class CPU {
                         case 0x0000: {
                             int targetRegister  = (opcode & 0x0F00) >> 8;
                             int sourceRegister = (opcode & 0x00F0) >> 4;
-
                             V[targetRegister] = V[sourceRegister];
-
                             programCounter += 2;
                             break;
                         }
@@ -150,7 +138,6 @@ public class CPU {
                         case 0x0001: {
                             int targetRegister = (opcode & 0x0F00) >> 8;
                             int sourceRegister = (opcode & 0x00F0) >> 4;
-
                             V[targetRegister] |= V[sourceRegister];
                             programCounter += 2;
                             break;
@@ -160,7 +147,6 @@ public class CPU {
                         case 0x0002: {
                             int targetRegister = (opcode & 0x0F00) >> 8;
                             int sourceRegister = (opcode & 0x00F0) >> 4;
-
                             V[targetRegister] &= V[sourceRegister];
                             programCounter += 2;
                             break;
@@ -170,7 +156,6 @@ public class CPU {
                         case 0x0003: {
                             int targetRegister = (opcode & 0x0F00) >> 8;
                             int sourceRegister = (opcode & 0x00F0) >> 4;
-
                             V[targetRegister] ^= V[sourceRegister];
                             programCounter += 2;
                             break;
@@ -180,19 +165,16 @@ public class CPU {
                         case 0x0004: {
                             int targetRegister = (opcode & 0x0F00) >> 8;
                             int sourceRegister = (opcode & 0x00F0) >> 4;
-
                             int result = V[targetRegister] + V[sourceRegister];
 
-                            if(result > 0xFF) {
+                            if (result > 0xFF) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
                             }
 
                             result &= 0xFF;
-
                             V[targetRegister] = (char) result;
-
                             programCounter += 2;
                             break;
                         }
@@ -202,15 +184,15 @@ public class CPU {
                             int targetRegister = (opcode & 0x0F00) >> 8;
                             int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            if(V[targetRegister] > V[sourceRegister]) {
+                            if (V[targetRegister] > V[sourceRegister]) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
                             }
 
                             int result = (V[targetRegister] - V[sourceRegister]) & 0xFF;
-                            V[targetRegister] = (char) result;
 
+                            V[targetRegister] = (char) result;
                             programCounter += 2;
                             break;
                         }
@@ -219,7 +201,7 @@ public class CPU {
                         case 0x0006: {
                             int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if((V[sourceRegister] & 0x000F) == 1) {
+                            if ((V[sourceRegister] & 0x000F) == 1) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
@@ -235,7 +217,7 @@ public class CPU {
                             int targetRegister = (opcode & 0x0F00) >> 8;
                             int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            if(V[sourceRegister] > V[targetRegister]) {
+                            if (V[sourceRegister] > V[targetRegister]) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
@@ -251,7 +233,7 @@ public class CPU {
                         case 0x000E: {
                             int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if((V[sourceRegister] & 0x000F) == 1) {
+                            if ((V[sourceRegister] & 0x000F) == 1) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
@@ -313,7 +295,7 @@ public class CPU {
                     for (int _y = 0; _y < n; _y++) {
                         int line = memory.readByte(I + _y);
 
-                        for(int _x = 0; _x < 8; _x++) {
+                        for (int _x = 0; _x < 8; _x++) {
                             int pixel = line & (0x80 >> _x);
 
                             if (pixel != 0) {
@@ -419,7 +401,6 @@ public class CPU {
                         // Fx1E: Set I = I + Vx (ADD I, Vx)
                         case 0x001E: {
                             int sourceRegister = (opcode & 0x0F00) >> 8;
-
                             I += V[sourceRegister];
                             programCounter += 2;
                             break;
@@ -454,10 +435,9 @@ public class CPU {
                         //Fx55: Store registers V0 through Vx in memory starting at location I (LD [I], Vx)
                         case 0x0055: {
                             int numRegisters = (opcode & 0x0F00) >> 8;
-                            for(int i = 0; i <= numRegisters; i ++) {
+                            for (int i = 0; i <= numRegisters; i ++) {
                                 memory.writeByte(I + i, V[i]);
                             }
-
                             programCounter += 2;
                             break;
                         }
@@ -470,9 +450,7 @@ public class CPU {
                             }
 
                             I = (char) (I + numRegisters + 1);
-
                             programCounter += 2;
-
                             break;
                         }
 

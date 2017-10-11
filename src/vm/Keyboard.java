@@ -5,21 +5,21 @@ import java.awt.event.KeyEvent;
 
 public class Keyboard extends KeyAdapter {
     private static final int[] KEY_MAP= {
-            KeyEvent.VK_4, // 1
-            KeyEvent.VK_5, // 2
-            KeyEvent.VK_6, // 3
-            KeyEvent.VK_7, // 4
-            KeyEvent.VK_R, // 5
-            KeyEvent.VK_Y, // 6
-            KeyEvent.VK_U, // 7
-            KeyEvent.VK_F, // 8
-            KeyEvent.VK_G, // 9
-            KeyEvent.VK_H, // A
-            KeyEvent.VK_J, // B
-            KeyEvent.VK_V, // C
-            KeyEvent.VK_B, // D
-            KeyEvent.VK_N, // E
-            KeyEvent.VK_M, // F
+            KeyEvent.VK_1, // 1
+            KeyEvent.VK_2, // 2
+            KeyEvent.VK_3, // 3
+            KeyEvent.VK_Q, // 4
+            KeyEvent.VK_W, // 5
+            KeyEvent.VK_E, // 6
+            KeyEvent.VK_A, // 7
+            KeyEvent.VK_S, // 8
+            KeyEvent.VK_D, // 9
+            KeyEvent.VK_Z, // A
+            KeyEvent.VK_C, // B
+            KeyEvent.VK_4, // C
+            KeyEvent.VK_R, // D
+            KeyEvent.VK_F, // E
+            KeyEvent.VK_V, // F
     };
 
     private int currentKeyPressed;

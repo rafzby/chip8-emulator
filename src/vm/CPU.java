@@ -3,9 +3,11 @@ package vm;
 import vm.exceptions.*;
 
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CPU {
-    private static final char USER_PROGRAM_START_ADDRESS = 0x200;
+    private static final char PROGRAM_COUNTER_START = 0x200;
     private static final int STACK_SIZE = 16;
     private static final int REGISTERS_NUMBER = 16;
 
@@ -25,21 +27,26 @@ public class CPU {
 
         stack = new Stack(STACK_SIZE);
 
-        programCounter = USER_PROGRAM_START_ADDRESS;
+        programCounter = PROGRAM_COUNTER_START;
         delayTimer = 0;
         soundTimer = 0;
 
         V = new char[REGISTERS_NUMBER];
         I = 0x0;
+
+        initTimers();
     }
 
-    public void execute() throws CpuException, InterruptedException {
+    public void execute() throws CpuException, InterruptedException, StackException {
         try {
             char opcode = memory.readOpcode(programCounter);
 
-            switch(opcode & 0xF000) { // First 4 bits are number of the operation
+           // System.out.println(memory);
+            //System.exit(0);
+           // System.out.println(Integer.toHexString(opcode));
 
-                case 0x0000: { // Multi-Case
+            switch(opcode & 0xF000) {
+                case 0x0000: {
                     switch(opcode & 0x00FF) {
 
                         // 00E00: Clear the display (CLS)
@@ -51,12 +58,7 @@ public class CPU {
 
                         // 00EE: Return from a subroutine (RET)
                         case 0x00EE: {
-                            try {
-                                programCounter = stack.pop();
-                            } catch (StackException e) {
-                                e.printStackTrace();
-                                System.exit(0);
-                            }
+                            programCounter = (char) (stack.pop() + 2);
                             break;
                         }
 
@@ -75,24 +77,17 @@ public class CPU {
 
                 // 2nnn: Call subroutine at nnn (CALL addr)
                 case 0x2000: {
-                    try {
-                        stack.push(programCounter);
-                    } catch (StackException e) {
-                        e.printStackTrace();
-                        System.exit(0);
-                    }
-
+                    stack.push(programCounter);
                     programCounter = (char) (opcode & 0x0FFF);
                     break;
                 }
 
                 // 3xkk: Skip next instruction if Vx = kk (SE Vx, byte)
                 case 0x3000: {
-                    int x = (opcode & 0x0F00) >> 8;
-                    int kk = (opcode & 0x00FF);
+                    int sourceRegister = (opcode & 0x0F00) >> 8;
+                    int value = (opcode & 0x00FF);
 
-
-                    if(V[x] == kk) {
+                    if (V[sourceRegister] == value) {
                         programCounter += 4;
                     } else {
                         programCounter += 2;
@@ -102,44 +97,38 @@ public class CPU {
 
                 // 4xkk: Skip next instruction if Vx != kk (SNE Vx, byte)
                 case 0x4000: {
-                    int x = (opcode & 0x0F00) >> 8;
-                    int kk = (opcode & 0x00FF);
+                    int sourceRegister = (opcode & 0x0F00) >> 8;
+                    int value = (opcode & 0x00FF);
 
-                    if(V[x] != kk) {
-                        programCounter += 4;
-                    } else {
-                        programCounter += 2;
-                    }
+                    programCounter += V[sourceRegister] != value ? 4 : 2;
                     break;
                 }
 
                 // 5xy0: Skip next instruction if Vx = Vy (SE Vx, Vy)
                 case 0x5000: {
-                    int x = (opcode & 0x0F00) >> 8;
-                    int y = (opcode & 0x00F0) >> 4;
+                    int sourceRegister = (opcode & 0x0F00) >> 8;
+                    int targetRegister = (opcode & 0x00F0) >> 4;
 
-                    if(V[x] == V[y]) {
-                        programCounter += 4;
-                    } else {
-                        programCounter += 2;
-                    }
-
+                    programCounter += V[sourceRegister] == V[targetRegister] ? 4 : 2;
                     break;
                 }
 
                 // 6xkk: Set Vx = kk (LD Vx, byte)
                 case 0x6000: {
-                    int x = (opcode & 0x0F00) >> 8;
-                    V[x] = (char) (opcode & 0x00FF);
+                    int targetRegister = (opcode & 0x0F00) >> 8;
+
+                    V[targetRegister] = (char) (opcode & 0x00FF);
+
                     programCounter += 2;
                     break;
                 }
 
                 // 7xkk: Set Vx = Vx + kk (ADD Vx, byte)
                 case 0x7000: {
-                    int x = (opcode & 0x0F00) >> 8;
-                    int kk = (opcode & 0x00FF);
-                    V[x] = (char)((V[x] + kk) & 0xFF);
+                    int targetRegister = (opcode & 0x0F00) >> 8;
+                    int value = (opcode & 0x00FF);
+
+                    V[targetRegister] = (char) ((V[targetRegister] + value) & 0xFF);
                     programCounter += 2;
                     break;
                 }
@@ -150,10 +139,10 @@ public class CPU {
 
                         // 8xy0: Set Vx = Vy (LD Vx, Vy)
                         case 0x0000: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int y = (opcode & 0x00F0) >> 4;
+                            int targetRegister  = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            V[x] = V[y];
+                            V[targetRegister] = V[sourceRegister];
 
                             programCounter += 2;
                             break;
@@ -161,51 +150,50 @@ public class CPU {
 
                         // 8xy1: Set Vx = Vx OR Vy (OR Vx, Vy)
                         case 0x0001: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int y = (opcode & 0x00F0) >> 4;
+                            int targetRegister = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            V[x] |= V[y];
+                            V[targetRegister] |= V[sourceRegister];
                             programCounter += 2;
-
                             break;
                         }
 
                         // 8xy2: Set Vx = Vx AND Vy (AND Vx, Vy)
                         case 0x0002: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int y = (opcode & 0x00F0) >> 4;
+                            int targetRegister = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            V[x] &= V[y];
+                            V[targetRegister] &= V[sourceRegister];
                             programCounter += 2;
                             break;
                         }
 
                         // 8xy3: Set Vx = Vx XOR Vy (XOR Vx, Vy)
                         case 0x0003: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int y = (opcode & 0x00F0) >> 4;
+                            int targetRegister = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            V[x] ^= V[y];
-
+                            V[targetRegister] ^= V[sourceRegister];
                             programCounter += 2;
                             break;
                         }
 
                         // 8xy4: Set Vx = Vx + Vy, set VF = carry
                         case 0x0004: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int y = (opcode & 0x00F0) >> 4;
+                            int targetRegister = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            int result = V[x] + V[y];
+                            int result = V[targetRegister] + V[sourceRegister];
 
                             if(result > 0xFF) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
                             }
+
                             result &= 0xFF;
 
-                            V[x] = (char)result;
+                            V[targetRegister] = (char) result;
 
                             programCounter += 2;
                             break;
@@ -213,70 +201,65 @@ public class CPU {
 
                         // 8xy5: Set Vx = Vx - Vy, set VF = NOT borrow (SUB Vx, Vy)
                         case 0x0005: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int y = (opcode & 0x00F0) >> 4;
+                            int targetRegister = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            if(V[x] > V[y]) {
+                            if(V[targetRegister] > V[sourceRegister]) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
                             }
 
-                            V[x] = (char)((V[x] - V[y]) & 0xFF);
+                            int result = (V[targetRegister] - V[sourceRegister]) & 0xFF;
+                            V[targetRegister] = (char) result;
 
                             programCounter += 2;
-
                             break;
                         }
 
                         // 8xy6: Set Vx = Vx SHR 1 (SHR Vx {, Vy})
                         case 0x0006: {
-                            int x = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if((V[x] & 0x000F) == 1) {
+                            if((V[sourceRegister] & 0x000F) == 1) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
                             }
 
-                            V[x] /= 2;
-
-
+                            V[sourceRegister] /= 2;
                             programCounter += 2;
                             break;
                         }
 
                         // 8xy7: Set Vx = Vy - Vx, set VF = NOT borrow
                         case 0x0007: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int y = (opcode & 0x00F0) >> 4;
+                            int targetRegister = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x00F0) >> 4;
 
-                            if(V[y] > V[x]) {
+                            if(V[sourceRegister] > V[targetRegister]) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
                             }
 
-                            V[x] = (char)(V[y] - V[x]);
+                            V[targetRegister] = (char) (V[sourceRegister] - V[targetRegister]);
 
                             programCounter += 2;
-
                             break;
                         }
 
                         // 8xyE: Set Vx = Vx SHL 1 (SHL Vx {, Vy})
                         case 0x000E: {
-                            int x = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if((V[x] & 0x000F) == 1) {
+                            if((V[sourceRegister] & 0x000F) == 1) {
                                 V[0xF] = 1;
                             } else {
                                 V[0xF] = 0;
                             }
 
-                            V[x] *= 2;
-
-
+                            V[sourceRegister] *= 2;
                             programCounter += 2;
                             break;
                         }
@@ -290,42 +273,33 @@ public class CPU {
 
                 // 9xy0: Skip nest instruction if Vx != Vy (SNE Vx, Vy)
                 case 0x9000: {
-                    int x = (opcode & 0x0F00) >> 8;
-                    int y = (opcode & 0x00F0) >> 4;
+                    int sourceRegister = (opcode & 0x0F00) >> 8;
+                    int targetRegister = (opcode & 0x00F0) >> 4;
 
-                    if(V[x] == V[y]) {
-                        programCounter += 2;
-                    } else {
-                        programCounter += 4;
-                    }
-
+                    programCounter += V[sourceRegister] != V[targetRegister] ? 4 : 2;
                     break;
                 }
 
                 // Annn: Set I = nnn (LD I, addr)
                 case 0xA000: {
-                    I = (char)(opcode & 0x0FFF);
+                    I = (char) (opcode & 0x0FFF);
                     programCounter += 2;
-
                     break;
                 }
 
                 // Bnnn: Jump to location nnn + V0 (JP V0, addr)
                 case 0xB000: {
-                    int nnn = opcode & 0x0FFF;
-                    programCounter = (char)(nnn + V[0x0]);
-
-
+                    programCounter = (char) (I + (opcode & 0x0FFF));
                     break;
                 }
 
                 // Cxkk: Set Vx = random byte AND kk (RND Vx, byte)
                 case 0xC000: {
-                    int x = (opcode & 0x0F00) >> 8;
-                    int kk = (opcode & 0x00FF);
-                    int randomNumber = new Random().nextInt(256) & kk;
+                    int targetRegister = (opcode & 0x0F00) >> 8;
+                    int value = opcode & 0x00FF;
+                    int randomNumber = new Random().nextInt(256) & value;
 
-                    V[x] = (char)randomNumber;
+                    V[targetRegister] = (char) randomNumber;
                     programCounter += 2;
                     break;
                 }
@@ -338,13 +312,13 @@ public class CPU {
 
                     V[0xF] = 0; // No collision
 
-                    for(int _y = 0; _y < n; _y++) {
+                    for (int _y = 0; _y < n; _y++) {
                         int line = memory.readByte(I + _y);
 
                         for(int _x = 0; _x < 8; _x++) {
-                            int pixel = line & (0x80 >> _x); // Read bits from left to right
+                            int pixel = line & (0x80 >> _x);
 
-                            if(pixel != 0) {
+                            if (pixel != 0) {
                                 int totalX = x + _x;
                                 int totalY = y + _y;
 
@@ -368,15 +342,14 @@ public class CPU {
                     break;
                 }
 
-                // Multi-Case
                 case 0xE000: {
                     switch(opcode & 0x00FF) {
 
                         // ExA1: Skip next instruction if key with the value of Vx is not pressed (SKNP Vx)
                         case 0x00A1: {
-                            int x = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if (!ioDevices.isKeyPressed(V[x])) {
+                            if (ioDevices.getCurrentKeyPressed() != V[sourceRegister]) {
                                 programCounter += 4;
                             } else {
                                 programCounter += 2;
@@ -386,9 +359,9 @@ public class CPU {
 
                         // Ex9E: Skip next instruction if key with the value of Vx is pressed (SKP Vx)
                         case 0x009E: {
-                            int x = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            if (ioDevices.isKeyPressed(V[x])) {
+                            if (ioDevices.getCurrentKeyPressed() == V[sourceRegister]) {
                                 programCounter += 4;
                             } else {
                                 programCounter += 2;
@@ -408,16 +381,15 @@ public class CPU {
 
                         // Fx07: Set Vx = delay timer value (LD Vx, DT)
                         case 0x0007: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            V[x] = (char) delayTimer;
+                            int targetRegister = (opcode & 0x0F00) >> 8;
+                            V[targetRegister] = (char) delayTimer;
                             programCounter += 2;
-
                             break;
                         }
 
                         // Fx0A: Wait for key press, store the value of the key in Vx (LD Vx, K)
                         case 0x000A: {
-                            int x = (opcode & 0xF00);
+                            int targetRegister = (opcode & 0x0F00);
                             int currentKey = ioDevices.getCurrentKeyPressed();
 
                             while (currentKey == 0) {
@@ -425,55 +397,49 @@ public class CPU {
                                 currentKey = ioDevices.getCurrentKeyPressed();
                             }
 
-                            V[x] = (char) currentKey;
+                            V[targetRegister] = (char) currentKey;
                             programCounter += 2;
-
                             break;
                         }
 
                         // Fx15: Set delay timer = Vx (LD DT, Vx)
                         case 0x0015: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            delayTimer = V[x];
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
+                            delayTimer = V[sourceRegister];
                             programCounter += 2;
-
                             break;
                         }
 
                         // Fx18: Set sound timer = Vx (LD ST, Vx)
                         case 0x0018: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            soundTimer = V[x];
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
+                            soundTimer = V[sourceRegister];
                             programCounter += 2;
-
                             break;
                         }
 
                         // Fx1E: Set I = I + Vx (ADD I, Vx)
                         case 0x001E: {
-                            int x = (opcode & 0x0F00) >> 8;
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
 
-                            I += V[x];
+                            I += V[sourceRegister];
                             programCounter += 2;
-
                             break;
                         }
 
                         //Fx29: Set I = location of sprite for digit Vx (LD F, Vx)
                         case 0x0029: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int character = V[x];
-
-                            I = (char)(0x050 + (character * 5));
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
+                            I = (char) (0x050 + V[sourceRegister] * 5);
                             programCounter += 2;
-
                             break;
                         }
 
                         //Fx33: Store BCD (Binary-Coded Decimal) representation of Vx in memory locations I, I+1, and I+2 (LD B, Vx)
                         case 0x0033: {
-                            int x = (opcode & 0x0F00) >> 8;
-                            int value = V[x];
+                            int sourceRegister = (opcode & 0x0F00) >> 8;
+                            int value = V[sourceRegister];
+
                             int hundreds = (value - (value % 100)) / 100;
                             value -= hundreds * 100;
                             int tens = (value - (value % 10))/ 10;
@@ -489,9 +455,8 @@ public class CPU {
 
                         //Fx55: Store registers V0 through Vx in memory starting at location I (LD [I], Vx)
                         case 0x0055: {
-                            int x = (opcode & 0x0F00) >> 8;
-
-                            for(int i = 0; i <= x; i ++) {
+                            int numRegisters = (opcode & 0x0F00) >> 8;
+                            for(int i = 0; i <= numRegisters; i ++) {
                                 memory.writeByte(I + i, V[i]);
                             }
 
@@ -501,12 +466,11 @@ public class CPU {
 
                         //Fx65: Read registers V0 through Vx from memory starting at location I (LD Vx, [I])
                         case 0x0065: {
-                            int x = (opcode & 0x0F00) >> 8;
-
-                            for(int i = 0; i <= x; i++) {
+                            int numRegisters = (opcode & 0x0F00) >> 8;
+                            for(int i = 0; i <= numRegisters; i++) {
                                 V[i] = memory.readByte(I + i);
                             }
-                            I = (char)(I + x + 1);
+                            //I = (char)(I + numRegisters + 1);
 
                             programCounter += 2;
 
@@ -523,18 +487,31 @@ public class CPU {
                 default:
                     throw new CpuException("Unsupported opcode.");
             }
-
-            if(soundTimer > 0) {
-                soundTimer--;
-            }
-
-            if(delayTimer > 0) {
-                delayTimer--;
-            }
         } catch (MemoryReadException e) {
             throw new CpuException("Unable to read opcode from memory.");
         }  catch (MemoryWriteException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void initTimers() {
+        Timer timer = new Timer("Delay Timer");
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                decrementTimers();
+            }
+        }, 17, 17); // TODO move times to consts
+    }
+
+    private void decrementTimers() {
+        if (delayTimer != 0) {
+            delayTimer--;
+        }
+
+        if (soundTimer != 0) {
+            soundTimer--;
+            // TODO implement midi player
         }
     }
 }

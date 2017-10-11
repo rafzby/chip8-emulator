@@ -1,10 +1,11 @@
 package vm;
 
 import vm.exceptions.CpuException;
+import vm.exceptions.DisplayException;
 import vm.exceptions.FontLoaderException;
 import vm.exceptions.ProgramLoaderException;
 
-public class VirtualMachine extends Thread {
+public class VirtualMachine extends Thread implements CPUCallbacks {
     private static final int MEMORY_SIZE = 0x1000;
     private static final int DISPLAY_SIZE = 0x800;
 
@@ -15,19 +16,24 @@ public class VirtualMachine extends Thread {
     private FontLoader fontLoader;
     private ProgramLoader programLoader;
     private Display display;
+    private Keyboard keyboard;
+    private boolean windowNeedsRepaint;
 
 
     public VirtualMachine() {
         memory = new Memory(MEMORY_SIZE);
         display = new Display(DISPLAY_SIZE);
+        keyboard = new Keyboard();
 
         displayPanel = new DisplayPanel(display.getPixelArray());
         mainWindow = new MainWindow(displayPanel);
 
-        cpu = new CPU(memory, display);
+        cpu = new CPU(memory, this);
 
         fontLoader = new FontLoader(memory);
         programLoader = new ProgramLoader(memory);
+
+        windowNeedsRepaint = false;
 
         loadFont();
     }
@@ -50,16 +56,19 @@ public class VirtualMachine extends Thread {
         }
     }
 
+
     @Override
     public void run() {
         mainWindow.setVisible(true);
 
-        while(true) {
+        while (true) {
             try {
                 cpu.execute();
 
-                // if needsRepaint
-                mainWindow.repaint();
+                if (windowNeedsRepaint) {
+                    mainWindow.repaint();
+                    windowNeedsRepaint = false;
+                }
 
                 try {
                     Thread.sleep(60);
@@ -67,11 +76,42 @@ public class VirtualMachine extends Thread {
                     e.printStackTrace();
                     System.exit(0);
                 }
-
             } catch (CpuException e) {
                 e.printStackTrace();
                 System.exit(0);
             }
         }
+    }
+
+    @Override
+    public void onDisplayRepaint() {
+        windowNeedsRepaint = true;
+    }
+
+    @Override
+    public void onDisplayClear() {
+        display.clear();
+    }
+
+    @Override
+    public void onDisplaySetPixelValue(int position, int value) {
+        try {
+            display.setPixelValue(position, value);
+        } catch (DisplayException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+    }
+
+    @Override
+    public int onDisplayGetPixelValue(int position) {
+        try {
+            return display.getPixelValue(position);
+        } catch (DisplayException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+
+        return 0; // TODO remove return 0;
     }
 }

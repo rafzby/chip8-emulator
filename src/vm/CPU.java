@@ -12,20 +12,18 @@ public class CPU {
     private char programCounter;
     private Memory memory;
     private Stack stack;
-    private Display display;
-    private RegisterManager registerManager;
+    private CPUCallbacks callbacks;
     private int delayTimer;
     private int soundTimer;
     private char[] V;
     private char I;
 
 
-    public CPU(Memory memory, Display display) {
+    public CPU(Memory memory, CPUCallbacks callbacks) {
         this.memory = memory;
-        this.display = display;
+        this.callbacks = callbacks;
 
         stack = new Stack(STACK_SIZE);
-        registerManager = new RegisterManager(REGISTERS_NUMBER);
         programCounter = USER_PROGRAM_START_ADDRESS;
         delayTimer = 0;
         soundTimer = 0;
@@ -45,7 +43,7 @@ public class CPU {
 
                         // 00E00: Clear the display (CLS)
                         case 0x00E0: {
-                            display.clear();
+                            callbacks.onDisplayClear();
                             programCounter += 2;
                             break;
                         }
@@ -354,18 +352,19 @@ public class CPU {
 
                                 int index = totalY * 64 + totalX;
 
-                                if (display.getPixelValue(index) == 1) {
+                                int pixelValue = callbacks.onDisplayGetPixelValue(index);
+
+                                if (pixelValue == 1) {
                                     V[0xF] = 1;
                                 }
 
-                                display.setPixelValue(index, display.getPixelValue(index) ^ 1);
+                                callbacks.onDisplaySetPixelValue(index, pixelValue ^ 1);
                             }
                         }
                     }
 
                     programCounter += 2;
-                    // needRedraw = true; // TODO handle it
-
+                    callbacks.onDisplayRepaint();
                     break;
                 }
 
@@ -529,9 +528,7 @@ public class CPU {
             }
         } catch (MemoryReadException e) {
             throw new CpuException("Unable to read opcode from memory.");
-        } catch (DisplayException e) {
-            e.printStackTrace();
-        } catch (MemoryWriteException e) {
+        }  catch (MemoryWriteException e) {
             e.printStackTrace();
         }
     }

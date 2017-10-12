@@ -14,15 +14,25 @@ public class DisplayPanel extends JPanel {
     }
 
     @Override
-    public void paint(Graphics graphics) {
+    public void paintComponent(Graphics graphics) {
+        super.paintComponent(graphics);
+        Graphics offGraphics;
+        Image offScreenImage = null;
+        Dimension d = size();
+        offScreenImage = createImage(d.width, d.height);
+        offGraphics = offScreenImage.getGraphics();
+        offGraphics.setColor(getBackground());
+        offGraphics.fillRect(0, 0, d.width, d.height);
+        offGraphics.setColor(getForeground());
         for (int i = 0; i < pixelArray.length; i++) {
             Color pixelColor = pixelArray[i] == 0 ? Color.BLACK : Color.WHITE;
-            graphics.setColor(pixelColor);
+            offGraphics.setColor(pixelColor);
 
             int positionX = i % 64;
             int positionY = (int) Math.floor(i/64);
 
-            graphics.fillRect(positionX * PIXEL_SIZE, positionY * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+            offGraphics.fillRect(positionX * PIXEL_SIZE, positionY * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
         }
+        graphics.drawImage(offScreenImage, 0, 0, this);
     }
 }

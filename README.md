@@ -4,12 +4,15 @@
 
 ![chip-8 pong](https://i.imgur.com/nsimcJk.png)
 
-### Todo
+### Technical references
 
- - Add double buffering to DisplayPanel.java
- - Extract CPU operations to separate functions
- - General refactor
+- http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+- http://mattmik.com/files/chip8/mastering/chip8.html
 
+
+### ROMs
+
+ - https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html
 
 License
 -------

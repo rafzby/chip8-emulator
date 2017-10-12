@@ -27,5 +27,4 @@
 License
 -------
 
-
-MIT
+[MIT](https://github.com/rafzby/chip8-emulator/blob/master/LICENSE)

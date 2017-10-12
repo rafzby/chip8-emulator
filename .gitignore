@@ -3,5 +3,3 @@ out
 lib
 tests
 resources/ROMs
-*.class
-.DS_Store

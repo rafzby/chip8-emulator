@@ -14,6 +14,16 @@
 
  - https://www.zophar.net/pdroms/chip8/chip-8-games-pack.html
 
+### Launch
+
+```sh
+./chip8-emulator.jar <ROM file>
+```
+
+```sh
+./chip8-emulator.jar TETRIS.c8
+```
+
 License
 -------
 

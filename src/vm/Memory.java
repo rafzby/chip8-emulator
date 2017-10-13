@@ -37,7 +37,10 @@ public class Memory {
 
         for (int i = 0; i < memory.length; i++) {
             try {
-                builder.append(Integer.toHexString(i)).append(": ").append(Integer.toHexString(readByte(i))).append("\n");
+                builder.append(Integer.toHexString(i))
+                        .append(": ")
+                        .append(Integer.toHexString(readByte(i)))
+                        .append("\n");
             } catch (MemoryReadException e) {
                 e.printStackTrace();
             }
@@ -46,3 +49,5 @@ public class Memory {
         return builder.toString();
     }
 }
+
+

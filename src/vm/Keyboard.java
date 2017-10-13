@@ -4,7 +4,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class Keyboard extends KeyAdapter {
-    private static final int[] KEY_MAP= {
+    private static final int[] KEY_MAP = {
             KeyEvent.VK_1, // 1
             KeyEvent.VK_2, // 2
             KeyEvent.VK_3, // 3

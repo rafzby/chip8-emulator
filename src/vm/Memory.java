@@ -20,7 +20,7 @@ public class Memory {
     }
 
     public char readOpcode(int address) throws MemoryReadException{
-        return (char)((readByte(address) << 8) | readByte(address + 1));
+        return (char) ((readByte(address) << 8) | readByte(address + 1));
     }
 
     public void writeByte(int address, char value) throws MemoryWriteException {

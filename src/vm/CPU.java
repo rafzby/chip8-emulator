@@ -475,7 +475,6 @@ public class CPU {
             @Override
             public void run() {
                 decrementTimers();
-                decrementTimers();
             }
         }, TIMERS_INTERVAL, TIMERS_INTERVAL);
     }

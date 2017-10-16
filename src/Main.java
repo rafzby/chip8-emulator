@@ -1,13 +1,10 @@
-import vm.VirtualMachine;
+import vm.VirtualMachineController;
 
 public class Main {
     public static void main(String[] args) {
-        if(args.length != 0) {
-            VirtualMachine virtualMachine = new VirtualMachine();
-            virtualMachine.loadProgram(args[0]);
-            virtualMachine.start();
-        } else {
-            System.err.println("Missing argument with ROM path.");
-        }
+        VirtualMachineController.getInstance();
+        //VirtualMachine virtualMachine = new VirtualMachine(main);
+        //virtualMachine.loadProgram(args[0]);
+        //virtualMachine.start();
     }
 }

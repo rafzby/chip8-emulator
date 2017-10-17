@@ -17,15 +17,17 @@ public class VirtualMachine extends Thread implements IODevice {
     private Display display;
     private Keyboard keyboard;
     private SoundPlayer soundPlayer;
+    private boolean running = false;
 
-    public VirtualMachine() {
+    public VirtualMachine(MainWindow mainWindowParam) {
+        this.mainWindow = mainWindowParam;
         memory = new Memory(MEMORY_SIZE);
         display = new Display(DISPLAY_SIZE);
         keyboard = new Keyboard();
         soundPlayer = new SoundPlayer();
 
         displayPanel = new DisplayPanel(display.getPixelArray());
-        mainWindow = new MainWindow(displayPanel, keyboard);
+        mainWindow.setup(displayPanel, keyboard);
 
         cpu = new CPU(memory, this);
 
@@ -53,12 +55,11 @@ public class VirtualMachine extends Thread implements IODevice {
         }
     }
 
-
     @Override
     public void run() {
-        mainWindow.setVisible(true);
-
-        while (true) {
+        //mainWindow.setVisible(true);
+        running = true;
+        while (running) {
             try {
                 cpu.execute();
 
@@ -73,6 +74,13 @@ public class VirtualMachine extends Thread implements IODevice {
                 System.exit(0);
             }
         }
+    }
+
+    public void stopThread() {
+        running = false;
+        clearDisplay();
+        repaintDisplay();
+        stopSound();
     }
 
     @Override

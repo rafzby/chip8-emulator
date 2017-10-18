@@ -49,14 +49,13 @@ public class CPU {
 
                         // 00E00: Clear the display (CLS)
                         case 0x00E0: {
-                            ioDevice.clearDisplay();
-                            programCounter += 2;
+                            opcode_00E0();
                             break;
                         }
 
                         // 00EE: Return from a subroutine (RET)
                         case 0x00EE: {
-                            programCounter = (char) (stack.pop() + 2);
+                            opcode_00EE();
                             break;
                         }
 
@@ -467,6 +466,15 @@ public class CPU {
         } catch (MemoryReadException e) {
             throw new CpuException("Unable to read opcode from memory.");
         }
+    }
+
+    private void opcode_00EE() throws StackException {
+      programCounter = (char) (stack.pop() + 2);
+    }
+
+    private void opcode_00E0() {
+      ioDevice.clearDisplay();
+      programCounter += 2;
     }
 
     private void initTimers() {

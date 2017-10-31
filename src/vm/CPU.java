@@ -49,14 +49,13 @@ public class CPU {
 
                         // 00E00: Clear the display (CLS)
                         case 0x00E0: {
-                            ioDevice.clearDisplay();
-                            programCounter += 2;
+                            clearDisplay();
                             break;
                         }
 
                         // 00EE: Return from a subroutine (RET)
                         case 0x00EE: {
-                            programCounter = (char) (stack.pop() + 2);
+                            returnFromSubroutine();
                             break;
                         }
 
@@ -69,55 +68,43 @@ public class CPU {
 
                 // 1nnn: Jump to location nnn (JP addr)
                 case 0x1000: {
-                    programCounter = (char) (opcode & 0x0FFF);
+                    jumpToLocation(opcode);
                     break;
                 }
 
                 // 2nnn: Call subroutine at nnn (CALL addr)
                 case 0x2000: {
-                    stack.push(programCounter);
-                    programCounter = (char) (opcode & 0x0FFF);
+                    callSubroutine(opcode);
                     break;
                 }
 
                 // 3xkk: Skip next instruction if Vx = kk (SE Vx, byte)
                 case 0x3000: {
-                    int sourceRegister = (opcode & 0x0F00) >> 8;
-                    int value = (opcode & 0x00FF);
-                    programCounter += V[sourceRegister] == value ? 4 : 2;
+                    skipInstructionIfEqual(opcode);
                     break;
                 }
 
                 // 4xkk: Skip next instruction if Vx != kk (SNE Vx, byte)
                 case 0x4000: {
-                    int sourceRegister = (opcode & 0x0F00) >> 8;
-                    int value = (opcode & 0x00FF);
-                    programCounter += V[sourceRegister] != value ? 4 : 2;
+                    skipInstructionIfNotEqual(opcode);
                     break;
                 }
 
                 // 5xy0: Skip next instruction if Vx = Vy (SE Vx, Vy)
                 case 0x5000: {
-                    int sourceRegister = (opcode & 0x0F00) >> 8;
-                    int targetRegister = (opcode & 0x00F0) >> 4;
-                    programCounter += V[sourceRegister] == V[targetRegister] ? 4 : 2;
+                    skipInstructionIfRegistersSameValue(opcode);
                     break;
                 }
 
                 // 6xkk: Set Vx = kk (LD Vx, byte)
                 case 0x6000: {
-                    int targetRegister = (opcode & 0x0F00) >> 8;
-                    V[targetRegister] = (char) (opcode & 0x00FF);
-                    programCounter += 2;
+                    setRegisterValue(opcode);
                     break;
                 }
 
                 // 7xkk: Set Vx = Vx + kk (ADD Vx, byte)
                 case 0x7000: {
-                    int targetRegister = (opcode & 0x0F00) >> 8;
-                    int value = (opcode & 0x00FF);
-                    V[targetRegister] = (char) ((V[targetRegister] + value) & 0xFF);
-                    programCounter += 2;
+                    addRegisterValue(opcode);
                     break;
                 }
 
@@ -467,6 +454,55 @@ public class CPU {
         } catch (MemoryReadException e) {
             throw new CpuException("Unable to read opcode from memory.");
         }
+    }
+
+    private void addRegisterValue(char opcode) {
+      int targetRegister = (opcode & 0x0F00) >> 8;
+      int value = (opcode & 0x00FF);
+      V[targetRegister] = (char) ((V[targetRegister] + value) & 0xFF);
+      programCounter += 2;
+    }
+
+    private void setRegisterValue(char opcode) {
+      int targetRegister = (opcode & 0x0F00) >> 8;
+      V[targetRegister] = (char) (opcode & 0x00FF);
+      programCounter += 2;
+    }
+
+    private void skipInstructionIfRegistersSameValue(char opcode) {
+      int sourceRegister = (opcode & 0x0F00) >> 8;
+      int targetRegister = (opcode & 0x00F0) >> 4;
+      programCounter += V[sourceRegister] == V[targetRegister] ? 4 : 2;
+    }
+
+    private void skipInstructionIfNotEqual(char opcode) {
+      int sourceRegister = (opcode & 0x0F00) >> 8;
+      int value = (opcode & 0x00FF);
+      programCounter += V[sourceRegister] != value ? 4 : 2;
+    }
+
+    private void skipInstructionIfEqual(char opcode) {
+      int sourceRegister = (opcode & 0x0F00) >> 8;
+      int value = (opcode & 0x00FF);
+      programCounter += V[sourceRegister] == value ? 4 : 2;
+    }
+
+    private void callSubroutine(char opcode) throws StackException {
+      stack.push(programCounter);
+      programCounter = (char) (opcode & 0x0FFF);
+    }
+
+    private void jumpToLocation(char opcode) {
+      programCounter = (char) (opcode & 0x0FFF);
+    }
+
+    private void returnFromSubroutine() throws StackException {
+      programCounter = (char) (stack.pop() + 2);
+    }
+
+    private void clearDisplay() {
+      ioDevice.clearDisplay();
+      programCounter += 2;
     }
 
     private void initTimers() {
